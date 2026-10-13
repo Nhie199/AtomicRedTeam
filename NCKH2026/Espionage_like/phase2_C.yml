@@ -1,0 +1,24 @@
+# phase2_C.yml
+- name: Phase 2 - Execution (PowerShell)
+  hosts: windows
+  gather_facts: no
+
+  tasks:
+    - name: Create Lab directory
+      win_file:
+        path: C:\Lab
+        state: directory
+
+    - name: Copy payload
+      win_copy:
+        src: files/payload.ps1
+        dest: C:\Lab\payload.ps1
+
+    - name: Execute payload
+      win_shell: |
+        powershell -ExecutionPolicy Bypass -File C:\Lab\payload.ps1
+      register: phase2_output
+
+    - name: Show output
+      debug:
+        var: phase2_output.stdout

@@ -1,0 +1,23 @@
+# phase3_C.yml
+- name: Phase 3 - Masquerade
+  hosts: windows
+  gather_facts: no
+
+  tasks:
+    - name: Copy notepad as svchost
+      win_shell: |
+        Copy-Item C:\Windows\System32\notepad.exe C:\Lab\svchost.exe -Force
+      register: copy_output
+
+    - name: Execute masqueraded file
+      win_shell: |
+        Start-Process C:\Lab\svchost.exe
+      register: exec_output
+
+    - name: Show copy output
+      debug:
+        var: copy_output.stdout
+
+    - name: Show execution output
+      debug:
+        var: exec_output.stdout

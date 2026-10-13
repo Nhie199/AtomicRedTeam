@@ -1,0 +1,40 @@
+# phase5_C.yml (FIXED)
+- name: Phase 5 - Discovery and Collection
+  hosts: windows
+  gather_facts: no
+
+  tasks:
+    - name: Create staging folder
+      win_file:
+        path: C:\Lab\collected
+        state: directory
+
+    - name: System information
+      win_shell: systeminfo
+      register: sysinfo_output
+
+    - name: List Public folder
+      win_shell: dir C:\Users\Public
+      register: dir_output
+
+    - name: Collect sensitive files
+      win_shell: |
+        Copy-Item C:\Users\Public\*.txt C:\Lab\collected\ -Force -ErrorAction SilentlyContinue
+        Copy-Item C:\Users\Public\*.docx C:\Lab\collected\ -Force -ErrorAction SilentlyContinue
+      register: collect_output
+
+    - name: Verify collected files
+      win_shell: dir C:\Lab\collected
+      register: verify_output
+
+    - name: Show system info
+      debug:
+        var: sysinfo_output.stdout
+
+    - name: Show directory listing
+      debug:
+        var: dir_output.stdout
+
+    - name: Show collection result
+      debug:
+        var: verify_output.stdout

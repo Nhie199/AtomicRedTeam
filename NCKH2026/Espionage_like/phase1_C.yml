@@ -1,0 +1,18 @@
+- name: Phase 1 - Initial Access
+  hosts: windows
+  gather_facts: no
+
+  tasks:
+    - name: Copy phishing file
+      win_copy:
+        src: files/invoice.docx
+        dest: C:\Users\Public\invoice.docx
+
+    - name: Simulate user opening file
+      win_shell: |
+        Start-Process notepad.exe "C:\Users\Public\invoice.docx"
+      register: phase1_output
+
+    - name: Show output
+      debug:
+        var: phase1_output.stdout

