@@ -1,0 +1,17 @@
+---
+- name: Phase 1 - Discovery
+  hosts: windows
+  gather_facts: no
+
+  tasks:
+    - name: System Info Discovery (T1082)
+      win_shell: |
+        Set-ExecutionPolicy Bypass -Scope Process -Force
+        Import-Module powershell-yaml
+        Import-Module "C:\AtomicRedTeam\invoke-atomicredteam\Invoke-AtomicRedTeam.psd1"
+        Invoke-AtomicTest T1082 -Confirm:$false
+      register: result_t1082
+
+    - name: Show result T1082
+      debug:
+        var: result_t1082.stdout

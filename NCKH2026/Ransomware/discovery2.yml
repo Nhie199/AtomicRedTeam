@@ -1,0 +1,41 @@
+---
+- name: Phase 1 - Discovery
+  hosts: windows
+  gather_facts: no
+
+  tasks:
+    # ===== T1082 =====
+    - name: System Info Discovery (T1082)
+      win_shell: |
+        Set-ExecutionPolicy Bypass -Scope Process -Force
+        Import-Module powershell-yaml
+        Import-Module "C:\AtomicRedTeam\invoke-atomicredteam\Invoke-AtomicRedTeam.psd1"
+        Invoke-AtomicTest T1082 -Confirm:$false
+      register: result_t1082
+
+    - name: Show result T1082
+      debug:
+        var: result_t1082.stdout
+
+    # ===== T1083 =====
+    - name: File and Directory Discovery (T1083 - Atomic)
+      win_shell: |
+        Set-ExecutionPolicy Bypass -Scope Process -Force
+        Import-Module powershell-yaml
+        Import-Module "C:\AtomicRedTeam\invoke-atomicredteam\Invoke-AtomicRedTeam.psd1"
+        Invoke-AtomicTest T1083 -Confirm:$false
+      register: result_t1083
+
+    - name: Show result T1083 (Atomic)
+      debug:
+        var: result_t1083.stdout
+
+    # ===== Attacker view (rõ hơn Atomic) =====
+    - name: Manual file discovery (attacker view)
+      win_shell: |
+        dir C:\Temp
+      register: file_list
+
+    - name: Show file list
+      debug:
+        var: file_list.stdout

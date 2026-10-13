@@ -1,0 +1,26 @@
+---
+- name: Phase 6 - Encrypt Simulation
+  hosts: windows
+  gather_facts: no
+
+  tasks:
+    - name: Rename files (real behavior)
+      win_shell: |
+        ren C:\Temp\staging\salary.txt salary.txt.encrypted
+        ren C:\Temp\staging\project.txt project.txt.encrypted
+        ren C:\Temp\staging\report.txt report.txt.encrypted
+        ren C:\Temp\staging\passwords.txt passwords.txt.encrypted
+
+    - name: Verify encrypted files
+      win_shell: dir C:\Temp\staging
+      register: encrypt_output
+
+    - debug:
+        var: encrypt_output.stdout
+
+    - name: Atomic Encrypt (T1486)
+      win_shell: |
+        Set-ExecutionPolicy Bypass -Scope Process -Force
+        Import-Module powershell-yaml
+        Import-Module "C:\AtomicRedTeam\invoke-atomicredteam\Invoke-AtomicRedTeam.psd1"
+        Invoke-AtomicTest T1486 -Confirm:$false

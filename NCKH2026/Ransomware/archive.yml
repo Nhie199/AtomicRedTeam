@@ -1,0 +1,22 @@
+---
+- name: Phase 3 - Archive
+  hosts: windows
+  gather_facts: no
+
+  tasks:
+    - name: Create zip (real behavior)
+      win_shell: Compress-Archive -Path C:\Temp\staging\* -DestinationPath C:\Temp\data.zip -Force
+
+    - name: Verify zip
+      win_shell: dir C:\Temp\data.zip
+      register: zip_output
+
+    - debug:
+        var: zip_output.stdout
+
+    - name: Atomic Archive (T1560.001)
+      win_shell: |
+        Set-ExecutionPolicy Bypass -Scope Process -Force
+        Import-Module powershell-yaml
+        Import-Module "C:\AtomicRedTeam\invoke-atomicredteam\Invoke-AtomicRedTeam.psd1"
+        Invoke-AtomicTest T1560.001 -Confirm:$false

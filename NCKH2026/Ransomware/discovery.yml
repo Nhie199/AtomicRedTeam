@@ -1,0 +1,17 @@
+---
+- name: Phase 1 - Discovery
+  hosts: windows
+  gather_facts: no
+
+  tasks:
+    - name: System Info Discovery (T1082)
+      win_shell: |
+        Set-ExecutionPolicy Bypass -Scope Process -Force
+        Import-Module "C:\AtomicRedTeam\invoke-atomicredteam\Invoke-AtomicRedTeam.psd1"
+        Invoke-AtomicTest T1082 -Confirm:$false
+
+    - name: File Discovery (T1083)
+      win_shell: |
+        Set-ExecutionPolicy Bypass -Scope Process -Force
+        Import-Module "C:\AtomicRedTeam\invoke-atomicredteam\Invoke-AtomicRedTeam.psd1"
+        Invoke-AtomicTest T1083 -Confirm:$false
